@@ -45,7 +45,25 @@
   letter-spacing: 0.3px;
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 8px;
+}
+
+.brand-by-text {
+  font-size: 12px;
+  font-weight: 400;
+  color: #666;
+}
+
+.brand-by-link {
+  color: #2C7A7B;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.brand-by-link:hover {
+  color: #1a5a5b;
+  text-decoration: underline;
 }
 
 .brand-logo {

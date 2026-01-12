@@ -1054,6 +1054,7 @@ function App() {
           <div className="brand-header">
             <div className="brand-name">
               <img src="/logo.svg" alt="MolDraw" className="brand-logo" />
+              <span className="brand-by-text">by <a href="https://scidart.com" target="_blank" rel="noopener noreferrer" className="brand-by-link">scidart.com</a></span>
             </div>
             <div className="header-links">
               <a
