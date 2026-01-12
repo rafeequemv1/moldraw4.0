@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Learn how to use MolDraw. Interactive course covering all features including 2D editing, 3D visualization, molecule search, and export options.">
+  <meta name="keywords" content="MolDraw tutorial, MolDraw course, learn MolDraw, molecule editor guide">
+  <meta property="og:title" content="MolDraw Course - Learn to Use MolDraw" />
+  <meta property="og:description" content="Complete interactive course to master MolDraw. Learn 2D editing, 3D visualization, molecule search, and export features." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://moldraw.scidart.com/og-image.png" />
+  <meta property="og:url" content="https://moldraw.scidart.com/course" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="author" content="Scidart Academy" />
+  <link rel="canonical" href="https://moldraw.scidart.com/course" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <title>MolDraw Course - Learn to Use MolDraw | Scidart Academy</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Libre Franklin', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    .course-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Left Sidebar - Course Outline */
+    .course-sidebar {
+      width: 280px;
+      background: white;
+      border-right: 1px solid #e8e8e8;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 0;
+    }
+
+    .sidebar-header {
+      padding: 0 24px 24px;
+      border-bottom: 1px solid #e8e8e8;
+      margin-bottom: 24px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #2C7A7B;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 16px;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: #1a5a5b;
+    }
+
+    .sidebar-header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-header p {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .course-outline {
+      padding: 0 24px;
+    }
+
+    .outline-item {
+      padding: 12px 16px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .outline-item:hover {
+      background: #f8f9fa;
+    }
+
+    .outline-item.active {
+      background: #f0f9fa;
+      border-left-color: #2C7A7B;
+      color: #2C7A7B;
+      font-weight: 600;
+    }
+
+    .outline-item-number {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e8e8e8;
+      color: #666;
+      text-align: center;
+      line-height: 24px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 12px;
+    }
+
+    .outline-item.active .outline-item-number {
+      background: #2C7A7B;
+      color: white;
+    }
+
+    .outline-item-title {
+      font-size: 14px;
+    }
+
+    /* Main Content Area */
+    .course-content {
+      flex: 1;
+      margin-left: 280px;
+      background: white;
+      min-height: 100vh;
+    }
+
+    .slide-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 40px;
+    }
+
+    .slide {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide h2 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 24px;
+      line-height: 1.3;
+    }
+
+    .slide h3 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #2d2d2d;
+      margin-top: 32px;
+      margin-bottom: 16px;
+    }
+
+    .slide p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    .slide ul, .slide ol {
+      margin-left: 24px;
+      margin-bottom: 20px;
+    }
+
+    .slide li {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #444;
+      margin-bottom: 12px;
+    }
+
+    .slide strong {
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+
+    .slide a {
+      color: #2C7A7B;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(44, 122, 123, 0.3);
+      transition: all 0.2s;
+    }
+
+    .slide a:hover {
+      color: #1a5a5b;
+      border-bottom-color: #1a5a5b;
+    }
+
+    .video-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      margin: 32px 0;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .feature-box {
+      background: #f8f9fa;
+      border-left: 3px solid #2C7A7B;
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 4px;
+    }
+
+    .feature-box h4 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2C7A7B;
+      margin-bottom: 12px;
+    }
+
+    .highlight {
+      background: #f0f9fa;
+      padding: 20px 24px;
+      border-radius: 8px;
+      margin: 24px 0;
+      border-left: 3px solid #2C7A7B;
+    }
+
+    /* Navigation */
+    .navigation {
+      position: fixed;
+      bottom: 0;
+      left: 280px;
+      right: 0;
+      background: white;
+      border-top: 1px solid #e8e8e8;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-btn {
+      background: #2C7A7B;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: #1a5a5b;
+      transform: translateY(-1px);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .nav-btn.prev {
+      background: #6b7280;
+    }
+
+    .nav-btn.prev:hover:not(:disabled) {
+      background: #4b5563;
+    }
+
+    .slide-counter {
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    @media (max-width: 1024px) {
+      .course-sidebar {
+        width: 240px;
+      }
+
+      .course-content {
+        margin-left: 240px;
+      }
+
+      .navigation {
+        left: 240px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .course-sidebar {
+        display: none;
+      }
+
+      .course-content {
+        margin-left: 0;
+      }
+
+      .navigation {
+        left: 0;
+        padding: 16px 20px;
+      }
+
+      .slide-container {
+        padding: 32px 20px 100px;
+      }
+
+      .slide h2 {
+        font-size: 26px;
+      }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": "MolDraw Complete Course",
+    "description": "Learn how to use MolDraw. Interactive course covering all features.",
+    "provider": {
+      "@type": "Organization",
+      "name": "Scidart Academy",
+      "url": "https://scidart.com"
+    },
+    "courseCode": "MOLDRAW-101",
+    "educationalLevel": "Beginner"
+  }
+  </script>
+</head>
+<body>
+  <div class="course-wrapper">
+    <!-- Left Sidebar -->
+    <div class="course-sidebar">
+      <div class="sidebar-header">
+        <a href="/" class="back-link">← Back to MolDraw</a>
+        <h1>MolDraw Course</h1>
+        <p>Master all features</p>
+      </div>
+      <div class="course-outline" id="courseOutline"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="course-content">
+      <div class="slide-container">
+        <!-- Slide 1: Introduction -->
+        <div class="slide active" data-slide="0">
+          <h2>Welcome to MolDraw</h2>
+          <p>Welcome to the complete MolDraw course! This interactive tutorial will teach you everything you need to know about using MolDraw.</p>
+          <div class="feature-box">
+            <h4>What You'll Learn</h4>
+            <ul>
+              <li>How to draw and edit molecular structures</li>
+              <li>Using the 3D visualization features</li>
+              <li>Searching for molecules by name</li>
+              <li>Exporting structures in various formats</li>
+              <li>Advanced tips and tricks</li>
+            </ul>
+          </div>
+          <p><strong>Course Duration:</strong> Approximately 15-20 minutes<br>
+          <strong>Level:</strong> Beginner to Intermediate<br>
+          <strong>Prerequisites:</strong> None - perfect for beginners!</p>
+        </div>
+
+        <!-- Slide 2: What is MolDraw -->
+        <div class="slide" data-slide="1">
+          <h2>What is MolDraw?</h2>
+          <p><strong>MolDraw</strong> is a powerful, web-based molecular structure editor that allows you to:</p>
+          <ul>
+            <li>Draw and edit chemical structures in 2D</li>
+            <li>Visualize molecules in 3D in real-time</li>
+            <li>Search for molecules by name using PubChem</li>
+            <li>Export structures in multiple formats (PNG, SDF, XYZ, X3D, OBJ)</li>
+            <li>Identify molecules and get their IUPAC names</li>
+          </ul>
+          <div class="feature-box">
+            <h4>Key Advantages</h4>
+            <p><strong>100% Free:</strong> No subscriptions, no hidden costs<br>
+            <strong>No Installation:</strong> Runs entirely in your browser<br>
+            <strong>Cross-Platform:</strong> Works on Windows, Mac, Linux, and mobile devices<br>
+            <strong>Privacy-Focused:</strong> Your data never leaves your device</p>
+          </div>
+        </div>
+
+        <!-- Slide 3: Getting Started -->
+        <div class="slide" data-slide="2">
+          <h2>Getting Started</h2>
+          <p>Getting started with MolDraw is incredibly simple. Here's how to begin:</p>
+          <ol>
+            <li><strong>Visit the Website:</strong> Go to <a href="/" target="_blank">moldraw.scidart.com</a></li>
+            <li><strong>No Sign-Up Required:</strong> Just open the page and start using it immediately</li>
+            <li><strong>Familiarize Yourself:</strong> The interface is split into two panels:
+              <ul style="margin-top: 10px;">
+                <li><strong>Left Panel:</strong> 2D molecular structure editor (Ketcher)</li>
+                <li><strong>Right Panel:</strong> 3D molecular viewer</li>
+              </ul>
+            </li>
+          </ol>
+          <div class="feature-box">
+            <h4>Your First Molecule</h4>
+            <p>Try drawing a simple molecule like benzene or water. Click on the atom tool in the left panel, then click on the canvas to place atoms. Connect them by clicking and dragging between atoms.</p>
+          </div>
+        </div>
+
+        <!-- Slide 4: Video Tutorial -->
+        <div class="slide" data-slide="3">
+          <h2>Video Tutorial</h2>
+          <p>Watch this comprehensive video tutorial to see MolDraw in action. This video covers all the essential features and will help you get started quickly.</p>
+          <div class="video-container">
+            <iframe src="https://www.youtube.com/embed/LFvrKzA02ok" title="MolDraw Tutorial Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="highlight">
+            <strong>Tip:</strong> Feel free to pause the video and try the features yourself as you watch. Hands-on practice is the best way to learn!
+          </div>
+        </div>
+
+        <!-- Slide 5: Drawing Structures -->
+        <div class="slide" data-slide="4">
+          <h2>Drawing Molecular Structures</h2>
+          <p>The left panel contains the Ketcher molecular editor. Here's how to draw structures:</p>
+          <h3>Basic Drawing Tools</h3>
+          <ul>
+            <li><strong>Atom Tool:</strong> Click to place atoms. Click on an existing atom to change its element</li>
+            <li><strong>Bond Tool:</strong> Click and drag between atoms to create bonds</li>
+            <li><strong>Selection Tool:</strong> Click and drag to select atoms/bonds for editing</li>
+            <li><strong>Eraser Tool:</strong> Click on atoms or bonds to delete them</li>
+          </ul>
+          <h3>Advanced Features</h3>
+          <ul>
+            <li><strong>Rings:</strong> Use the ring tool to quickly add common ring structures</li>
+            <li><strong>Charges:</strong> Add formal charges to atoms</li>
+            <li><strong>Stereochemistry:</strong> Indicate stereocenters with wedges and dashes</li>
+            <li><strong>Text Labels:</strong> Add custom text annotations</li>
+          </ul>
+        </div>
+
+        <!-- Slide 6: 3D Visualization -->
+        <div class="slide" data-slide="5">
+          <h2>3D Molecular Visualization</h2>
+          <p>One of MolDraw's standout features is its integrated 3D viewer. As you draw or modify a structure, you can see it rendered in three dimensions in real-time.</p>
+          <h3>Rendering Styles</h3>
+          <ul>
+            <li><strong>Ball & Stick:</strong> Classic representation showing atoms as spheres and bonds as sticks (default)</li>
+            <li><strong>Stick:</strong> Simplified view focusing on the molecular framework</li>
+            <li><strong>Space-Fill:</strong> Van der Waals radii representation showing molecular volume</li>
+            <li><strong>Line:</strong> Minimal wireframe view for clarity</li>
+          </ul>
+          <h3>Interactive Controls</h3>
+          <ul>
+            <li><strong>Rotate:</strong> Click and drag to rotate the molecule</li>
+            <li><strong>Zoom:</strong> Use mouse wheel or pinch gesture on touchscreens</li>
+            <li><strong>Pan:</strong> Right-click and drag (or middle mouse button) to pan</li>
+          </ul>
+        </div>
+
+        <!-- Slide 7: Molecule Search -->
+        <div class="slide" data-slide="6">
+          <h2>Searching for Molecules</h2>
+          <p>Don't want to draw from scratch? MolDraw integrates with PubChem to search for molecules by name!</p>
+          <h3>How to Search</h3>
+          <ol>
+            <li>Type a molecule name in the search bar at the top of the left panel</li>
+            <li>Examples: "aspirin", "caffeine", "benzene", "glucose"</li>
+            <li>Press Enter or click the search button</li>
+            <li>MolDraw will fetch the structure from PubChem and load it into the editor</li>
+          </ol>
+        </div>
+
+        <!-- Slide 8: Export Options -->
+        <div class="slide" data-slide="7">
+          <h2>Exporting Your Structures</h2>
+          <p>MolDraw supports multiple export formats to suit different needs:</p>
+          <h3>Available Formats</h3>
+          <ul>
+            <li><strong>PNG:</strong> High-quality image with transparent background - perfect for presentations</li>
+            <li><strong>SDF:</strong> Structure Data Format - compatible with most chemistry software</li>
+            <li><strong>XYZ:</strong> Coordinate format - ideal for computational chemistry</li>
+            <li><strong>X3D:</strong> 3D model format with bonds - great for web visualization</li>
+            <li><strong>OBJ:</strong> 3D model format - compatible with Blender and other 3D software</li>
+          </ul>
+        </div>
+
+        <!-- Slide 9: Advanced Tips -->
+        <div class="slide" data-slide="8">
+          <h2>Advanced Tips & Tricks</h2>
+          <h3>Workflow Optimization</h3>
+          <ul>
+            <li><strong>Start with Templates:</strong> Use ring structures and templates for common functional groups</li>
+            <li><strong>Use Search First:</strong> If you know the molecule name, search for it rather than drawing from scratch</li>
+            <li><strong>Edit After Search:</strong> Load a molecule from PubChem, then modify it to create derivatives</li>
+          </ul>
+          <h3>3D Visualization Tips</h3>
+          <ul>
+            <li><strong>Switch Styles:</strong> Different rendering styles help visualize different aspects</li>
+            <li><strong>Hide Hydrogens:</strong> For complex molecules, hiding hydrogens makes the structure clearer</li>
+            <li><strong>Rotate Before Export:</strong> Find the best viewing angle before exporting PNG</li>
+          </ul>
+        </div>
+
+        <!-- Slide 10: Use Cases -->
+        <div class="slide" data-slide="9">
+          <h2>Who Can Use MolDraw?</h2>
+          <p>MolDraw is designed for anyone who works with molecular structures:</p>
+          <h3>Students</h3>
+          <ul>
+            <li>Organic chemistry homework and assignments</li>
+            <li>Lab reports and presentations</li>
+            <li>Studying reaction mechanisms</li>
+          </ul>
+          <h3>Researchers</h3>
+          <ul>
+            <li>Quick structure drawing for papers</li>
+            <li>Creating figures for presentations</li>
+            <li>Documenting chemical syntheses</li>
+          </ul>
+          <h3>Educators</h3>
+          <ul>
+            <li>Creating teaching materials</li>
+            <li>Designing exam questions</li>
+            <li>Visual aids for lectures</li>
+          </ul>
+        </div>
+
+        <!-- Slide 11: Troubleshooting -->
+        <div class="slide" data-slide="10">
+          <h2>Troubleshooting & FAQ</h2>
+          <h3>Common Issues</h3>
+          <ul>
+            <li><strong>3D View Not Updating:</strong> Make sure you've drawn a valid structure. Try refreshing the page if issues persist.</li>
+            <li><strong>Search Not Working:</strong> Check your internet connection. PubChem requires an active connection.</li>
+            <li><strong>Export Not Downloading:</strong> Check your browser's download settings.</li>
+          </ul>
+          <h3>Browser Compatibility</h3>
+          <p>MolDraw works best on modern browsers (Chrome, Firefox, Safari, Edge). Make sure JavaScript is enabled.</p>
+        </div>
+
+        <!-- Slide 12: Conclusion -->
+        <div class="slide" data-slide="11">
+          <h2>Congratulations!</h2>
+          <p>You've completed the MolDraw course! You now know how to:</p>
+          <ul>
+            <li>✅ Draw and edit molecular structures</li>
+            <li>✅ Use the 3D visualization features</li>
+            <li>✅ Search for molecules by name</li>
+            <li>✅ Export structures in multiple formats</li>
+            <li>✅ Apply advanced tips and techniques</li>
+          </ul>
+          <div class="highlight">
+            <h3>Next Steps</h3>
+            <ol>
+              <li><strong>Practice:</strong> Try drawing some molecules you're familiar with</li>
+              <li><strong>Explore:</strong> Experiment with different rendering styles and export formats</li>
+              <li><strong>Share:</strong> Use MolDraw for your projects, assignments, or research</li>
+            </ol>
+          </div>
+          <p style="text-align: center; margin-top: 40px;">
+            <a href="/" style="display: inline-block; background: #2C7A7B; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+              Start Using MolDraw →
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="navigation">
+        <button class="nav-btn prev" id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+        <div class="slide-counter">
+          <span id="currentSlide">1</span> / <span id="totalSlides">12</span>
+        </div>
+        <button class="nav-btn next" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const slideTitles = [
+      'Welcome to MolDraw',
+      'What is MolDraw?',
+      'Getting Started',
+      'Video Tutorial',
+      'Drawing Structures',
+      '3D Visualization',
+      'Molecule Search',
+      'Export Options',
+      'Advanced Tips',
+      'Use Cases',
+      'Troubleshooting',
+      'Congratulations!'
+    ];
+
+    // Create outline
+    const outline = document.getElementById('courseOutline');
+    slideTitles.forEach((title, index) => {
+      const item = document.createElement('div');
+      item.className = 'outline-item' + (index === 0 ? ' active' : '');
+      item.onclick = () => goToSlide(index);
+      item.innerHTML = `
+        <span class="outline-item-number">${index + 1}</span>
+        <span class="outline-item-title">${title}</span>
+      `;
+      outline.appendChild(item);
+    });
+
+    function showSlide(n) {
+      if (n >= totalSlides) {
+        currentSlide = 0;
+      } else if (n < 0) {
+        currentSlide = totalSlides - 1;
+      } else {
+        currentSlide = n;
+      }
+
+      slides.forEach((slide, index) => {
+        slide.classList.remove('active');
+        if (index === currentSlide) {
+          slide.classList.add('active');
+        }
+      });
+
+      // Update outline
+      document.querySelectorAll('.outline-item').forEach((item, index) => {
+        item.classList.remove('active');
+        if (index === currentSlide) {
+          item.classList.add('active');
+        }
+      });
+
+      // Update counter
+      document.getElementById('currentSlide').textContent = currentSlide + 1;
+      document.getElementById('totalSlides').textContent = totalSlides;
+
+      // Update buttons
+      document.getElementById('prevBtn').disabled = currentSlide === 0;
+      document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function changeSlide(direction) {
+      showSlide(currentSlide + direction);
+    }
+
+    function goToSlide(n) {
+      showSlide(n);
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        changeSlide(-1);
+      } else if (e.key === 'ArrowRight') {
+        changeSlide(1);
+      }
+    });
+
+    // Initialize
+    showSlide(0);
+  </script>
+</body>
+</html>

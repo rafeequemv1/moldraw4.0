@@ -1,0 +1,35 @@
+{
+  "short_name": "MolDraw",
+  "name": "MolDraw - Free ChemDraw Alternative",
+  "description": "Draw, edit, name, and export molecules with integrated 3D visualization. Free ChemDraw alternative.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#667eea",
+  "background_color": "#ffffff",
+  "orientation": "any",
+  "categories": ["education", "science", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}
