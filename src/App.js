@@ -4,6 +4,7 @@ import './App.css';
 function App() {
   const viewer3DRef = useRef(null);
   const viewerInstanceRef = useRef(null);
+  const viewerBgRef = useRef({ color: '#f8f9fa', alpha: 1 });
   const iframeRef = useRef(null);
   const [is3DReady, setIs3DReady] = useState(false);
   const [isKetcherReady, setIsKetcherReady] = useState(false);
@@ -32,6 +33,8 @@ function App() {
         if (viewer3DRef.current && !viewerInstanceRef.current) {
           const config = { backgroundColor: '#f8f9fa' };
           const viewer = $3Dmol.createViewer(viewer3DRef.current, config);
+          // Keep track of the intended background so we can restore it after exports
+          viewerBgRef.current = { color: '#f8f9fa', alpha: 1 };
           viewerInstanceRef.current = viewer;
           setIs3DReady(true);
 
@@ -411,7 +414,7 @@ function App() {
     switch (format) {
       case 'png':
         // Export as PNG with transparent background
-        const currentBg = viewer.getView()[3]; // Save current background
+        const { color: bgColor, alpha: bgAlpha } = viewerBgRef.current;
         viewer.setBackgroundColor(0xffffff, 0); // Set transparent
         viewer.render();
         const canvas = viewer.getCanvas();
@@ -423,7 +426,7 @@ function App() {
           link.click();
           URL.revokeObjectURL(url);
           // Restore original background
-          viewer.setBackgroundColor(currentBg);
+          viewer.setBackgroundColor(bgColor, bgAlpha);
           viewer.render();
         }, 'image/png');
         return;
