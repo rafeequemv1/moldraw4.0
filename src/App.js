@@ -19,6 +19,88 @@ function App() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [is3DPanelOpen, setIs3DPanelOpen] = useState(true);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+
+  // Initialize IndexedDB for caching
+  useEffect(() => {
+    const initDB = async () => {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('MolDrawCache', 1);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains('appState')) {
+            db.createObjectStore('appState', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('molecules')) {
+            db.createObjectStore('molecules', { keyPath: 'id' });
+          }
+        };
+      });
+    };
+
+    // Load cached state
+    const loadCachedState = async () => {
+      try {
+        // Try localStorage first (faster)
+        const cachedState = localStorage.getItem('moldraw_state');
+        if (cachedState) {
+          const state = JSON.parse(cachedState);
+          if (state.renderStyle) setRenderStyle(state.renderStyle);
+          if (state.showHydrogens !== undefined) setShowHydrogens(state.showHydrogens);
+          if (state.is3DPanelOpen !== undefined) setIs3DPanelOpen(state.is3DPanelOpen);
+        }
+
+        // Initialize IndexedDB
+        await initDB();
+      } catch (error) {
+        console.warn('Cache initialization failed:', error);
+      }
+    };
+
+    loadCachedState();
+  }, []);
+
+  // Save state to cache
+  useEffect(() => {
+    const state = {
+      renderStyle,
+      showHydrogens,
+      is3DPanelOpen,
+      timestamp: Date.now()
+    };
+    try {
+      localStorage.setItem('moldraw_state', JSON.stringify(state));
+    } catch (error) {
+      console.warn('Failed to save state to localStorage:', error);
+    }
+  }, [renderStyle, showHydrogens, is3DPanelOpen]);
+
+  // Cache molecule data in IndexedDB
+  const cacheMolecule = useCallback(async (molfile, smiles) => {
+    try {
+      const db = await new Promise((resolve, reject) => {
+        const request = indexedDB.open('MolDrawCache', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+      });
+
+      const transaction = db.transaction(['molecules'], 'readwrite');
+      const store = transaction.objectStore('molecules');
+      
+      await store.put({
+        id: 'current',
+        molfile,
+        smiles,
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      console.warn('Failed to cache molecule:', error);
+    }
+  }, []);
 
   // Initialize 3Dmol viewer
   useEffect(() => {
@@ -307,6 +389,11 @@ function App() {
           // Store current molecule for export
           setCurrentMolecule({ data: structureData, format: format });
 
+          // Cache molecule
+          if (smiles) {
+            cacheMolecule(structureData, smiles);
+          }
+
           // Apply selected render style
           applyRenderStyle(viewer, renderStyle);
 
@@ -329,7 +416,7 @@ function App() {
     } catch (error) {
       console.error('Error updating 3D molecule:', error);
     }
-  }, [renderStyle, applyRenderStyle]);
+  }, [renderStyle, applyRenderStyle, cacheMolecule]);
 
   // Re-apply style when it changes
   useEffect(() => {
@@ -966,14 +1053,26 @@ function App() {
           {/* Brand Header */}
           <div className="brand-header">
             <div className="brand-name">
-              MolDraw <span className="brand-by">by</span>{' '}
+              <img src="/logo.svg" alt="MolDraw" className="brand-logo" />
+            </div>
+            <div className="header-links">
               <a
-                href="https://scidart.com"
+                href="/course/index.html"
+                className="header-nav-link"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="brand-link"
+                title="Learn how to use MolDraw"
               >
-                Scidart
+                Course
+              </a>
+              <a
+                href="/pages/about.html"
+                className="header-nav-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="About MolDraw"
+              >
+                About
               </a>
             </div>
           </div>
@@ -1060,6 +1159,52 @@ function App() {
                 className="viewer-3d"
                 data-testid="viewer-3d"
               />
+
+              {/* Feedback Chat Widget */}
+              <div className="feedback-widget">
+                {/* Chat Bubble Button */}
+                <button
+                  className="feedback-bubble"
+                  onClick={() => setIsFeedbackOpen(!isFeedbackOpen)}
+                  title="Share your feedback"
+                  aria-label="Open feedback form"
+                >
+                  {isFeedbackOpen ? '✕' : '💬'}
+                </button>
+
+                {/* Chat Box */}
+                {isFeedbackOpen && (
+                  <div className="feedback-chat-box">
+                    <div className="feedback-chat-header">
+                      <div className="feedback-chat-title">
+                        <span className="feedback-chat-icon">💬</span>
+                        <span>Give Feedback</span>
+                      </div>
+                      <button
+                        className="feedback-chat-close"
+                        onClick={() => setIsFeedbackOpen(false)}
+                        aria-label="Close feedback form"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="feedback-chat-content">
+                      <div className="feedback-chat-message">
+                        <p>Help us improve MolDraw! Share your thoughts, suggestions, or report any issues.</p>
+                      </div>
+                      <div className="feedback-chat-form">
+                        <iframe
+                          src="https://forms.scidart.com/qg3zpn"
+                          title="MolDraw feedback form"
+                          className="feedback-iframe"
+                          loading="lazy"
+                          allowFullScreen
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Floating Controls */}
               <div className="floating-controls">

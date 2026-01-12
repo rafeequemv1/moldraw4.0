@@ -4,7 +4,7 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+  font-family: 'Libre Franklin', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
 }
 
 .split-container {
@@ -32,6 +32,10 @@
   background: white;
   padding: 10px 16px;
   border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .brand-name {
@@ -39,25 +43,62 @@
   color: #1a1a1a;
   font-weight: 700;
   letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
-.brand-by {
-  font-size: 11px;
-  color: #999;
-  font-weight: 400;
-  margin: 0 4px;
+.brand-logo {
+  height: 32px; /* 20% smaller (40px * 0.8) */
+  width: auto;
+  display: inline-block;
 }
 
-.brand-link {
-  color: #667eea;
+
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-nav-link,
+.feedback-link {
+  padding: 8px 12px;
+  border-radius: 10px;
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.2s;
+  font-size: 12px;
+  transition: all 0.2s ease;
 }
 
-.brand-link:hover {
-  color: #764ba2;
-  text-decoration: underline;
+.header-nav-link {
+  color: #4b5563;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.header-nav-link:hover {
+  color: #111827;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.feedback-link {
+  color: white;
+  background: #2C7A7B;
+  box-shadow: 0 6px 16px rgba(44, 122, 123, 0.35);
+  animation: feedbackPulse 2.8s ease-in-out infinite;
+}
+
+.feedback-link:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 10px 20px rgba(44, 122, 123, 0.45);
+}
+
+@keyframes feedbackPulse {
+  0% { box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35); }
+  50% { box-shadow: 0 8px 22px rgba(118, 75, 162, 0.42); }
+  100% { box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35); }
 }
 
 /* Molecule Search Bar */
@@ -86,7 +127,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2C7A7B;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -101,7 +142,7 @@
 
 .search-btn {
   padding: 10px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2C7A7B;
   border: none;
   border-radius: 10px;
   color: white;
@@ -115,7 +156,7 @@
 
 .search-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(44, 122, 123, 0.3);
 }
 
 .search-btn:active:not(:disabled) {
@@ -186,10 +227,10 @@
 }
 
 .panel-toggle-btn:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2C7A7B;
   color: white;
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(44, 122, 123, 0.3);
 }
 
 /* Molecule Name Banner */
@@ -214,11 +255,11 @@
 }
 
 .molecule-name-content {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2C7A7B;
   color: white;
   padding: 12px 24px;
   border-radius: 20px;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 16px rgba(44, 122, 123, 0.3);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -255,11 +296,179 @@
   position: relative;
 }
 
+/* Feedback Chat Widget */
+.feedback-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  font-family: 'Libre Franklin', sans-serif;
+}
+
+/* Ensure widget is visible even when 3D panel is minimized */
+.viewer-panel .feedback-widget {
+  position: fixed;
+}
+
+.feedback-bubble {
+  width: 56px;
+  height: 56px;
+  background: #2C7A7B;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(44, 122, 123, 0.4);
+  transition: all 0.3s ease;
+  animation: feedbackPulse 2.5s ease-in-out infinite;
+  color: white;
+}
+
+.feedback-bubble:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(44, 122, 123, 0.5);
+  background: #1a5a5b;
+}
+
+.feedback-bubble:active {
+  transform: scale(0.95);
+}
+
+@keyframes feedbackPulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(44, 122, 123, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(44, 122, 123, 0.5);
+  }
+}
+
+/* Chat Box */
+.feedback-chat-box {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - 40px);
+  height: 500px;
+  max-height: calc(100vh - 100px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feedback-chat-header {
+  background: #2C7A7B;
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 16px 16px 0 0;
+}
+
+.feedback-chat-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.feedback-chat-icon {
+  font-size: 20px;
+}
+
+.feedback-chat-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.feedback-chat-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.feedback-chat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.feedback-chat-message {
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.feedback-chat-message p {
+  margin: 0;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.feedback-chat-form {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.feedback-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .feedback-chat-box {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 100px);
+    bottom: 70px;
+  }
+  
+  .feedback-widget {
+    bottom: 16px;
+    left: 16px;
+  }
+}
+
 /* Floating Controls - Compact & Elegant */
 .floating-controls {
   position: absolute;
   bottom: 16px;
-  right: 16px;
+  left: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -289,13 +498,13 @@
 }
 
 .compact-select:hover {
-  border-color: #667eea;
+  border-color: #2C7A7B;
 }
 
 .compact-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+  border-color: #2C7A7B;
+  box-shadow: 0 0 0 2px rgba(44, 122, 123, 0.1);
 }
 
 .color-picker {
@@ -308,7 +517,7 @@
 }
 
 .color-picker:hover {
-  border-color: #667eea;
+  border-color: #2C7A7B;
 }
 
 .compact-btn {
@@ -328,13 +537,13 @@
 }
 
 .compact-btn:hover {
-  border-color: #667eea;
+  border-color: #2C7A7B;
   transform: translateY(-1px);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
 .compact-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2C7A7B;
   color: white;
   border-color: transparent;
 }
@@ -381,7 +590,7 @@
 }
 
 .compact-export-btn:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2C7A7B;
   color: white;
   border-color: transparent;
   transform: translateY(-1px);
@@ -415,7 +624,7 @@
   width: 14px;
   height: 14px;
   border: 2px solid #e0e0e0;
-  border-top-color: #667eea;
+  border-top-color: #2C7A7B;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
