@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body,
+    html,
+    #root {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
+  <script>
+    // Bridge script to communicate with parent
+    window.addEventListener('load', function () {
+      // Poll for ketcher instance and notify parent when ready
+      const checkKetcher = setInterval(function () {
+        const ketcherFrame = document.getElementById('ketcher-frame');
+        if (ketcherFrame && ketcherFrame.contentWindow && ketcherFrame.contentWindow.ketcher) {
+          clearInterval(checkKetcher);
+
+          const ketcher = ketcherFrame.contentWindow.ketcher;
+          console.log('Ketcher instance found:', ketcher);
+
+          // Notify parent that Ketcher is ready
+          window.parent.postMessage({ type: 'ketcher-ready' }, '*');
+
+          // Listen for requests from parent
+          window.addEventListener('message', async function (event) {
+            console.log('Bridge received message:', event.data);
+
+            if (event.data.type === 'get-molfile') {
+              try {
+                const molfile = await ketcher.getMolfile();
+                window.parent.postMessage({
+                  type: 'molfile-response',
+                  molfile: molfile
+                }, '*');
+              } catch (error) {
+                console.error('Error getting molfile:', error);
+                window.parent.postMessage({
+                  type: 'molfile-error',
+                  error: error.message
+                }, '*');
+              }
+            } else if (event.data.type === 'get-smiles') {
+              try {
+                const smiles = await ketcher.getSmiles();
+                window.parent.postMessage({
+                  type: 'smiles-response',
+                  smiles: smiles
+                }, '*');
+              } catch (error) {
+                console.error('Error getting SMILES:', error);
+                window.parent.postMessage({
+                  type: 'smiles-error',
+                  error: error.message
+                }, '*');
+              }
+            } else if (event.data.type === 'set-molecule') {
+              try {
+                const structure = event.data.smiles;
+                console.log('Setting molecule with structure:', structure);
+
+                // Use setMolecule API to load structure
+                await ketcher.setMolecule(structure);
+
+                console.log('Molecule set successfully');
+                window.parent.postMessage({
+                  type: 'molecule-set',
+                  success: true
+                }, '*');
+              } catch (error) {
+                console.error('Error setting molecule:', error);
+                window.parent.postMessage({
+                  type: 'molecule-set',
+                  success: false,
+                  error: error.message
+                }, '*');
+              }
+            }
+          });
+        }
+      }, 100);
+
+      // Timeout after 30 seconds
+      setTimeout(function () {
+        clearInterval(checkKetcher);
+      }, 30000);
+    });
+  </script>
+</head>
+
+<body>
+  <iframe id="ketcher-frame" src="/ketcher/index.html"
+    style="width: 100%; height: 100%; border: none; display: block;"></iframe>
+</body>
+
+</html>

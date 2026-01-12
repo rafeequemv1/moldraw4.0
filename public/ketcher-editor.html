@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ketcher Molecule Editor</title>
+    <link rel="stylesheet" href="https://unpkg.com/ketcher-standalone@2.7.2/dist/index.css" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/ketcher-core@2.7.2/dist/index.js"></script>
+    <script src="https://unpkg.com/ketcher-standalone@2.7.2/dist/index.js"></script>
+    <script src="https://unpkg.com/ketcher-react@2.7.2/dist/index.js"></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        try {
+          const root = document.getElementById('root');
+          const structServiceProvider = new window.ketcherStandalone.StandaloneStructServiceProvider();
+          
+          const reactRoot = ReactDOM.createRoot(root);
+          reactRoot.render(
+            React.createElement(window.ketcherReact.Editor, {
+              staticResourcesUrl: '',
+              structServiceProvider: structServiceProvider,
+              errorHandler: function(message) {
+                console.error('Ketcher error:', message);
+              },
+              onInit: function(ketcher) {
+                window.ketcher = ketcher;
+                console.log('Ketcher initialized successfully');
+                // Notify parent window if in iframe
+                if (window.parent !== window) {
+                  window.parent.postMessage({ type: 'ketcher-ready' }, '*');
+                }
+              }
+            })
+          );
+        } catch (error) {
+          console.error('Failed to initialize Ketcher:', error);
+          document.getElementById('root').innerHTML = '<div style="padding: 20px; color: red;">Failed to load Ketcher: ' + error.message + '</div>';
+        }
+      });
+    </script>
+  </body>
+</html>
