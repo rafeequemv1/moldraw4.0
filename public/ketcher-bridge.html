@@ -62,6 +62,29 @@
                   error: error.message
                 }, '*');
               }
+            } else if (event.data.type === 'get-svg') {
+              try {
+                // Get structure using getKet()
+                const struct = await ketcher.getKet();
+                
+                // Generate SVG using generateImage API
+                const options = { outputFormat: 'svg' };
+                const svgBlob = await ketcher.generateImage(struct, options);
+                
+                // Convert blob to text
+                const svgText = await svgBlob.text();
+                
+                window.parent.postMessage({
+                  type: 'svg-response',
+                  svg: svgText
+                }, '*');
+              } catch (error) {
+                console.error('Error getting SVG:', error);
+                window.parent.postMessage({
+                  type: 'svg-error',
+                  error: error.message
+                }, '*');
+              }
             } else if (event.data.type === 'set-molecule') {
               try {
                 const structure = event.data.smiles;
