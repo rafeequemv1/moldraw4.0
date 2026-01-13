@@ -85,6 +85,29 @@
                   error: error.message
                 }, '*');
               }
+            } else if (event.data.type === 'get-png') {
+              try {
+                // Get structure using getKet()
+                const struct = await ketcher.getKet();
+                
+                // Generate PNG using generateImage API
+                const options = { outputFormat: 'png' };
+                const pngBlob = await ketcher.generateImage(struct, options);
+                
+                // Convert blob to array buffer for transfer
+                const arrayBuffer = await pngBlob.arrayBuffer();
+                
+                window.parent.postMessage({
+                  type: 'png-response',
+                  pngData: arrayBuffer
+                }, '*');
+              } catch (error) {
+                console.error('Error getting PNG:', error);
+                window.parent.postMessage({
+                  type: 'png-error',
+                  error: error.message
+                }, '*');
+              }
             } else if (event.data.type === 'set-molecule') {
               try {
                 const structure = event.data.smiles;

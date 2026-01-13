@@ -19,10 +19,8 @@ function App() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [is3DPanelOpen, setIs3DPanelOpen] = useState(true);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [moleculeMetadata, setMoleculeMetadata] = useState(null);
-  const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
-  const [isMetadataOpen, setIsMetadataOpen] = useState(false);
+  const [isProtein, setIsProtein] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Initialize IndexedDB for caching
   useEffect(() => {
@@ -151,9 +149,82 @@ function App() {
   }, []);
 
   // Search molecule by name and load into Ketcher
+  // Check if query is a PDB ID (4 characters, alphanumeric)
+  const isPDBID = (query) => {
+    const trimmed = query.trim().toUpperCase();
+    return /^[A-Z0-9]{4}$/.test(trimmed);
+  };
+
+  // Fetch PDB structure by ID from RCSB PDB database
+  const fetchPDBByID = async (pdbId) => {
+    try {
+      setIsSearching(true);
+      setSearchError('');
+
+      const upperPDBId = pdbId.trim().toUpperCase();
+      const pdbUrl = `https://files.rcsb.org/download/${upperPDBId}.pdb`;
+
+      console.log('Fetching PDB:', pdbUrl);
+
+      const response = await fetch(pdbUrl);
+
+      if (response.ok) {
+        const pdbText = await response.text();
+
+        if (!viewerInstanceRef.current) {
+          alert('3D viewer not ready. Please wait a moment.');
+          setIsSearching(false);
+          return;
+        }
+
+        const viewer = viewerInstanceRef.current;
+        viewer.clear();
+
+        // Load PDB into 3D viewer
+        viewer.addModel(pdbText, 'pdb');
+
+        // Set style for protein (cartoon representation)
+        viewer.setStyle({}, { cartoon: { color: 'spectrum' } });
+
+        // Store PDB data
+        setCurrentMolecule({
+          data: pdbText,
+          format: 'pdb',
+          has3D: true,
+          isProtein: true
+        });
+
+        setIsProtein(true);
+        setRenderStyle('cartoon');
+        setMoleculeName(upperPDBId);
+        setSearchQuery('');
+
+        // Center and zoom
+        viewer.zoomTo();
+        viewer.rotate(25, { x: 1, y: 1, z: 0 });
+        viewer.render();
+
+        setIsSearching(false);
+      } else {
+        setSearchError(`PDB ID "${upperPDBId}" not found in RCSB PDB database`);
+        setIsSearching(false);
+      }
+    } catch (error) {
+      console.error('Error fetching PDB:', error);
+      setSearchError('Failed to fetch PDB structure. Please check the PDB ID and try again.');
+      setIsSearching(false);
+    }
+  };
+
   const searchMoleculeByName = async (moleculeName) => {
     if (!moleculeName || moleculeName.trim() === '') {
-      setSearchError('Please enter a molecule name');
+      setSearchError('Please enter a molecule name or PDB ID');
+      return;
+    }
+
+    // Check if it's a PDB ID (4 characters, alphanumeric)
+    if (isPDBID(moleculeName)) {
+      await fetchPDBByID(moleculeName);
       return;
     }
 
@@ -244,62 +315,6 @@ function App() {
     }
   };
 
-  // Fetch comprehensive molecule metadata from PubChem
-  const fetchMoleculeMetadata = async (smiles) => {
-    if (!smiles || smiles.trim() === '') {
-      return;
-    }
-
-    try {
-      setIsLoadingMetadata(true);
-      const encodedSmiles = encodeURIComponent(smiles);
-
-      // Fetch multiple properties from PubChem
-      const properties = [
-        'MolecularWeight',
-        'MolecularFormula',
-        'CanonicalSMILES',
-        'IsomericSMILES',
-        'InChI',
-        'InChIKey',
-        'IUPACName',
-        'Title',
-        'XLogP',
-        'ExactMass',
-        'MonoisotopicMass',
-        'TPSA',
-        'Complexity',
-        'Charge',
-        'HBondDonorCount',
-        'HBondAcceptorCount',
-        'RotatableBondCount',
-        'HeavyAtomCount'
-      ].join(',');
-
-      const apiUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodedSmiles}/property/${properties}/JSON`;
-
-      const response = await fetch(apiUrl);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.PropertyTable && data.PropertyTable.Properties && data.PropertyTable.Properties[0]) {
-          setMoleculeMetadata(data.PropertyTable.Properties[0]);
-          setIsMetadataOpen(true);
-        } else {
-          alert('Metadata not found in PubChem');
-        }
-      } else {
-        alert('Failed to fetch metadata');
-      }
-
-      setIsLoadingMetadata(false);
-    } catch (error) {
-      console.error('Error fetching metadata:', error);
-      alert('Error fetching metadata');
-      setIsLoadingMetadata(false);
-    }
-  };
-
   // Convert SMILES to 3D structure
   const convertSmilesTo3D = async (smiles) => {
     if (!smiles || smiles.trim() === '') {
@@ -330,8 +345,13 @@ function App() {
   };
 
   // Apply render style to molecule
-  const applyRenderStyle = useCallback((viewer, style) => {
+  const applyRenderStyle = useCallback((viewer, style, isProteinMode = false) => {
     if (!viewer) return;
+
+    // Skip style application for proteins (handled separately)
+    if (isProteinMode) {
+      return;
+    }
 
     const vdwScale = {
       'H': 0.20, 'C': 0.28, 'N': 0.27, 'O': 0.26,
@@ -460,7 +480,7 @@ function App() {
           }
 
           // Apply selected render style
-          applyRenderStyle(viewer, renderStyle);
+          applyRenderStyle(viewer, renderStyle, false);
 
           // Center and rotate for 3D view
           viewer.zoomTo();
@@ -486,10 +506,24 @@ function App() {
   // Re-apply style when it changes
   useEffect(() => {
     if (viewerInstanceRef.current && currentMolecule) {
-      applyRenderStyle(viewerInstanceRef.current, renderStyle);
+      if (isProtein) {
+        // Handle protein styles
+        const viewer = viewerInstanceRef.current;
+        if (renderStyle === 'cartoon') {
+          viewer.setStyle({}, { cartoon: { color: 'spectrum' } });
+        } else if (renderStyle === 'stick') {
+          viewer.setStyle({}, { stick: { radius: 0.15 } });
+        } else if (renderStyle === 'sphere') {
+          viewer.setStyle({}, { sphere: { scale: 0.6 } });
+        } else {
+          viewer.setStyle({}, { line: {} });
+        }
+      } else {
+        applyRenderStyle(viewerInstanceRef.current, renderStyle, false);
+      }
       viewerInstanceRef.current.render();
     }
-  }, [renderStyle, showHydrogens, applyRenderStyle, currentMolecule]);
+  }, [renderStyle, showHydrogens, applyRenderStyle, currentMolecule, isProtein]);
 
   // Request molecule update
   const requestMoleculeUpdate = useCallback(() => {
@@ -528,12 +562,6 @@ function App() {
         const molfile = window.tempMolfile;
         const smiles = event.data.smiles;
 
-        // If metadata was requested, fetch it now (independent of molfile)
-        if (window.fetchMetadataAfterSmiles) {
-          window.fetchMetadataAfterSmiles = false;
-          fetchMoleculeMetadata(smiles);
-        }
-
         // Only update 3D if we have a molfile (normal flow)
         if (molfile) {
           updateMolecule3D(molfile, smiles);
@@ -558,6 +586,24 @@ function App() {
       } else if (event.data.type === 'svg-error') {
         console.error('SVG export error:', event.data.error);
         alert('Failed to export SVG: ' + (event.data.error || 'Unknown error'));
+      } else if (event.data.type === 'png-response') {
+        // PNG data comes as array buffer or data URL
+        try {
+          const pngData = event.data.pngData;
+          const blob = new Blob([pngData], { type: 'image/png' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'molecule.png';
+          link.click();
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Error downloading PNG:', error);
+          alert('Failed to download PNG. Please try again.');
+        }
+      } else if (event.data.type === 'png-error') {
+        console.error('PNG export error:', event.data.error);
+        alert('Failed to export PNG: ' + (event.data.error || 'Unknown error'));
       } else if (event.data.type === 'molecule-set') {
         console.log('Molecule set in Ketcher:', event.data);
         if (event.data.success) {
@@ -601,6 +647,61 @@ function App() {
     setShowHydrogens(!showHydrogens);
   };
 
+  // Handle PDB file import
+  const handlePDBImport = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check if it's a PDB file
+    if (!file.name.toLowerCase().endsWith('.pdb')) {
+      alert('Please select a PDB file (.pdb)');
+      return;
+    }
+
+    try {
+      const pdbText = await file.text();
+      
+      if (!viewerInstanceRef.current) {
+        alert('3D viewer not ready. Please wait a moment.');
+        return;
+      }
+
+      const viewer = viewerInstanceRef.current;
+      viewer.clear();
+      
+      // Load PDB into 3D viewer
+      viewer.addModel(pdbText, 'pdb');
+      
+      // Set style for protein (cartoon representation)
+      viewer.setStyle({}, { cartoon: { color: 'spectrum' } });
+      
+      // Store PDB data
+      setCurrentMolecule({
+        data: pdbText,
+        format: 'pdb',
+        has3D: true,
+        isProtein: true
+      });
+      
+      setIsProtein(true);
+      setRenderStyle('cartoon'); // Set default style for proteins
+      setMoleculeName(file.name.replace('.pdb', ''));
+      
+      // Center and zoom
+      viewer.zoomTo();
+      viewer.rotate(25, { x: 1, y: 1, z: 0 });
+      viewer.render();
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Error loading PDB file:', error);
+      alert('Failed to load PDB file. Please check the file format.');
+    }
+  };
+
   // Export 3D model
   const exportModel = (format) => {
     if (!viewerInstanceRef.current || !currentMolecule) {
@@ -634,8 +735,8 @@ function App() {
         return;
 
       case 'pdb':
-        exportData = viewer.pdbData || currentMolecule.data;
-        filename = 'molecule.pdb';
+        exportData = currentMolecule.data;
+        filename = isProtein ? 'protein.pdb' : 'molecule.pdb';
         mimeType = 'chemical/x-pdb';
         break;
 
@@ -1178,7 +1279,7 @@ function App() {
                 <input
                   type="text"
                   className="search-input"
-                  placeholder="Search molecule..."
+                  placeholder="Search molecule or PDB ID (e.g., 1ABC)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => {
@@ -1192,7 +1293,7 @@ function App() {
                   className="search-btn"
                   onClick={() => searchMoleculeByName(searchQuery)}
                   disabled={isSearching || !searchQuery.trim()}
-                  title="Search molecule by name"
+                  title="Search molecule by name or PDB ID"
                 >
                   {isSearching ? (
                     <div className="btn-spinner"></div>
@@ -1233,6 +1334,31 @@ function App() {
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
                 <span>SVG</span>
+              </button>
+
+              {/* PNG Download Button */}
+              <button
+                className="header-svg-download-btn"
+                onClick={async () => {
+                  if (iframeRef.current && isKetcherReady) {
+                    try {
+                      iframeRef.current.contentWindow.postMessage({ type: 'get-png' }, '*');
+                    } catch (error) {
+                      console.error('Error requesting PNG:', error);
+                      alert('Failed to export PNG. Please try again.');
+                    }
+                  } else {
+                    alert('Editor not ready. Please wait a moment.');
+                  }
+                }}
+                title="Download structure as PNG"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>PNG</span>
               </button>
               
               <a
@@ -1302,186 +1428,29 @@ function App() {
                 data-testid="viewer-3d"
               />
 
-              {/* Feedback Chat Widget */}
-              <div className="feedback-widget">
-                {/* Chat Bubble Button */}
+              {/* PDB Import Button */}
+              <div className="pdb-import-container">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdb"
+                  onChange={handlePDBImport}
+                  style={{ display: 'none' }}
+                  id="pdb-file-input"
+                />
                 <button
-                  className="feedback-bubble"
-                  onClick={() => setIsFeedbackOpen(!isFeedbackOpen)}
-                  title="Share your feedback"
-                  aria-label="Open feedback form"
+                  className="pdb-import-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Import PDB file (protein structure)"
                 >
-                  {isFeedbackOpen ? '✕' : '💬'}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <span>PDB</span>
                 </button>
-
-                {/* Chat Box */}
-                {isFeedbackOpen && (
-                  <div className="feedback-chat-box">
-                    <div className="feedback-chat-header">
-                      <div className="feedback-chat-title">
-                        <span className="feedback-chat-icon">💬</span>
-                        <span>Give Feedback</span>
-                      </div>
-                      <button
-                        className="feedback-chat-close"
-                        onClick={() => setIsFeedbackOpen(false)}
-                        aria-label="Close feedback form"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <div className="feedback-chat-content">
-                      <div className="feedback-chat-message">
-                        <p>Help us improve MolDraw! Share your thoughts, suggestions, or report any issues.</p>
-                      </div>
-                      <div className="feedback-chat-form">
-                        <iframe
-                          src="https://forms.scidart.com/qg3zpn"
-                          title="MolDraw feedback form"
-                          className="feedback-iframe"
-                          loading="lazy"
-                          allowFullScreen
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
-
-              {/* Metadata Button */}
-              {currentMolecule && (
-                <button
-                  className="metadata-btn"
-                  onClick={async () => {
-                    // Get SMILES from Ketcher
-                    if (iframeRef.current && isKetcherReady) {
-                      iframeRef.current.contentWindow.postMessage({ type: 'get-smiles' }, '*');
-                      // Store callback to fetch metadata after getting SMILES
-                      window.fetchMetadataAfterSmiles = true;
-                    }
-                  }}
-                  disabled={isLoadingMetadata}
-                  title="View molecule metadata"
-                >
-                  {isLoadingMetadata ? (
-                    <div className="btn-spinner-small"></div>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="16" x2="12" y2="12"></line>
-                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                  )}
-                </button>
-              )}
-
-              {/* Metadata Panel */}
-              {isMetadataOpen && moleculeMetadata && (
-                <div className="metadata-panel">
-                  <div className="metadata-header">
-                    <h3>Molecule Properties</h3>
-                    <button
-                      className="metadata-close"
-                      onClick={() => setIsMetadataOpen(false)}
-                      aria-label="Close metadata"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div className="metadata-content">
-                    {moleculeMetadata.Title && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">Name:</span>
-                        <span className="metadata-value">{moleculeMetadata.Title}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.IUPACName && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">IUPAC Name:</span>
-                        <span className="metadata-value">{moleculeMetadata.IUPACName}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.MolecularFormula && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">Formula:</span>
-                        <span className="metadata-value">{moleculeMetadata.MolecularFormula}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.MolecularWeight && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">Molecular Weight:</span>
-                        <span className="metadata-value">{moleculeMetadata.MolecularWeight.toFixed(2)} g/mol</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.ExactMass && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">Exact Mass:</span>
-                        <span className="metadata-value">{moleculeMetadata.ExactMass.toFixed(4)} Da</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.XLogP !== undefined && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">Log P:</span>
-                        <span className="metadata-value">{moleculeMetadata.XLogP.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.TPSA !== undefined && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">TPSA:</span>
-                        <span className="metadata-value">{moleculeMetadata.TPSA.toFixed(2)} Å²</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.HBondDonorCount !== undefined && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">H-Bond Donors:</span>
-                        <span className="metadata-value">{moleculeMetadata.HBondDonorCount}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.HBondAcceptorCount !== undefined && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">H-Bond Acceptors:</span>
-                        <span className="metadata-value">{moleculeMetadata.HBondAcceptorCount}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.RotatableBondCount !== undefined && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">Rotatable Bonds:</span>
-                        <span className="metadata-value">{moleculeMetadata.RotatableBondCount}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.HeavyAtomCount !== undefined && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">Heavy Atoms:</span>
-                        <span className="metadata-value">{moleculeMetadata.HeavyAtomCount}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.Complexity !== undefined && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">Complexity:</span>
-                        <span className="metadata-value">{moleculeMetadata.Complexity.toFixed(0)}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.CanonicalSMILES && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">SMILES:</span>
-                        <span className="metadata-value metadata-smiles">{moleculeMetadata.CanonicalSMILES}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.InChI && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">InChI:</span>
-                        <span className="metadata-value metadata-inchi">{moleculeMetadata.InChI}</span>
-                      </div>
-                    )}
-                    {moleculeMetadata.InChIKey && (
-                      <div className="metadata-item">
-                        <span className="metadata-label">InChI Key:</span>
-                        <span className="metadata-value">{moleculeMetadata.InChIKey}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Floating Controls */}
               <div className="floating-controls">
@@ -1489,14 +1458,42 @@ function App() {
                 <div className="control-row">
                   <select
                     value={renderStyle}
-                    onChange={(e) => setRenderStyle(e.target.value)}
+                    onChange={(e) => {
+                      const newStyle = e.target.value;
+                      setRenderStyle(newStyle);
+                      // For proteins, apply appropriate style
+                      if (isProtein && viewerInstanceRef.current) {
+                        const viewer = viewerInstanceRef.current;
+                        if (newStyle === 'cartoon') {
+                          viewer.setStyle({}, { cartoon: { color: 'spectrum' } });
+                        } else if (newStyle === 'stick') {
+                          viewer.setStyle({}, { stick: { radius: 0.15 } });
+                        } else if (newStyle === 'sphere') {
+                          viewer.setStyle({}, { sphere: { scale: 0.6 } });
+                        } else {
+                          viewer.setStyle({}, { line: {} });
+                        }
+                        viewer.render();
+                      }
+                    }}
                     className="compact-select"
                     title="Rendering style"
                   >
-                    <option value="ball-stick">Ball & Stick</option>
-                    <option value="stick">Stick</option>
-                    <option value="sphere">Space-Fill</option>
-                    <option value="line">Line</option>
+                    {isProtein ? (
+                      <>
+                        <option value="cartoon">Cartoon</option>
+                        <option value="stick">Stick</option>
+                        <option value="sphere">Space-Fill</option>
+                        <option value="line">Line</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="ball-stick">Ball & Stick</option>
+                        <option value="stick">Stick</option>
+                        <option value="sphere">Space-Fill</option>
+                        <option value="line">Line</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
