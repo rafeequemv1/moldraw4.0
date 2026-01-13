@@ -178,9 +178,14 @@ function App() {
         }
 
         const viewer = viewerInstanceRef.current;
+        
+        // Clear any existing molecule data
+        setCurrentMolecule(null);
+        setMoleculeName('');
+        lastMoleculeRef.current = null;
+        
+        // Clear viewer and load PDB
         viewer.clear();
-
-        // Load PDB into 3D viewer
         viewer.addModel(pdbText, 'pdb');
 
         // Set style for protein (cartoon representation)
@@ -436,6 +441,11 @@ function App() {
   // Update 3D viewer with molecule
   const updateMolecule3D = useCallback(async (molfile, smiles) => {
     if (!viewerInstanceRef.current) return;
+    
+    // Don't update if we're in protein mode (protein should be cleared first)
+    if (isProtein) {
+      return;
+    }
 
     try {
       const viewer = viewerInstanceRef.current;
@@ -545,25 +555,38 @@ function App() {
         if (newMolfile !== lastMoleculeRef.current) {
           lastMoleculeRef.current = newMolfile;
 
+          // If protein is currently loaded, clear it and update immediately (no debounce)
+          const wasProtein = isProtein;
+          if (isProtein) {
+            setIsProtein(false);
+            setCurrentMolecule(null);
+            setMoleculeName('');
+            if (viewerInstanceRef.current) {
+              viewerInstanceRef.current.clear();
+            }
+          }
+
           // Debounce: Clear existing timeout and set new one
           if (debounceTimeoutRef.current) {
             clearTimeout(debounceTimeoutRef.current);
           }
           
-          // Wait 1 second after last change before updating 3D
+          // If switching from protein, update immediately; otherwise use faster debounce (300ms)
+          const debounceTime = wasProtein ? 0 : 300;
+          
           debounceTimeoutRef.current = setTimeout(() => {
             if (iframeRef.current && isKetcherReady) {
               iframeRef.current.contentWindow.postMessage({ type: 'get-smiles' }, '*');
             }
             window.tempMolfile = newMolfile;
-          }, 1000);
+          }, debounceTime);
         }
       } else if (event.data.type === 'smiles-response') {
         const molfile = window.tempMolfile;
         const smiles = event.data.smiles;
 
-        // Only update 3D if we have a molfile (normal flow)
-        if (molfile) {
+        // Only update 3D if we have a molfile (normal flow) and not in protein mode
+        if (molfile && !isProtein) {
           updateMolecule3D(molfile, smiles);
         }
 
@@ -619,17 +642,18 @@ function App() {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [isKetcherReady, updateMolecule3D, requestMoleculeUpdate]);
+  }, [isKetcherReady, updateMolecule3D, requestMoleculeUpdate, isProtein]);
 
   // Debounce timeout ref for 3D updates
   const debounceTimeoutRef = useRef(null);
 
   // Poll for changes - debounced updates handled in message handler
+  // Only poll when not in protein mode (proteins are static, no need to poll)
   useEffect(() => {
-    if (isKetcherReady && is3DReady) {
+    if (isKetcherReady && is3DReady && !isProtein) {
       // Poll every 2 seconds to check for changes
       const interval = setInterval(() => {
-        if (iframeRef.current && isKetcherReady) {
+        if (iframeRef.current && isKetcherReady && !isProtein) {
           iframeRef.current.contentWindow.postMessage({ type: 'get-molfile' }, '*');
         }
       }, 2000);
@@ -640,7 +664,7 @@ function App() {
         }
       };
     }
-  }, [isKetcherReady, is3DReady]);
+  }, [isKetcherReady, is3DReady, isProtein]);
 
   // Toggle hydrogens
   const toggleHydrogens = () => {
@@ -667,9 +691,14 @@ function App() {
       }
 
       const viewer = viewerInstanceRef.current;
-      viewer.clear();
       
-      // Load PDB into 3D viewer
+      // Clear any existing molecule data
+      setCurrentMolecule(null);
+      setMoleculeName('');
+      lastMoleculeRef.current = null;
+      
+      // Clear viewer and load PDB
+      viewer.clear();
       viewer.addModel(pdbText, 'pdb');
       
       // Set style for protein (cartoon representation)
